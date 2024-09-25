@@ -1,20 +1,20 @@
-package db
+package repository
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"syscall"
-	"time"
 )
 
 type Todo struct {
 	Id          int
 	Description string
 	Done        bool
-	Created     time.Time
+	Created     sql.NullTime
 }
 
 func AddNewTodo(t *Todo) {
@@ -109,11 +109,15 @@ func openCSVFile() (*os.File, error) {
 }
 
 func todoToStringArray(t Todo) []string {
+	var epoch int64
+	if t.Created.Valid {
+		epoch = t.Created.Time.Unix()
+	}
 	return []string{
 		strconv.Itoa(t.Id),
 		t.Description,
 		strconv.FormatBool(t.Done),
-		strconv.FormatInt(t.Created.Unix(), 10),
+		strconv.FormatInt(epoch, 10),
 	}
 }
 

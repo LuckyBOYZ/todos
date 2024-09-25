@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16.4
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  flyway:
+    image: flyway/flyway
+    container_name: flyway_container
+    command: >
+      -url=jdbc:postgresql://postgres:5432/${DB_NAME} 
+      -user=${DB_USER} 
+      -password=${DB_PASSWORD} 
+      -locations=filesystem:/flyway/sql migrate
+    depends_on:
+      - postgres
+    volumes:
+      - ./db/migration:/flyway/sql
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/lukasz/docker_volume/postgres
+      o: bind

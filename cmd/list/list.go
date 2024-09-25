@@ -1,7 +1,8 @@
 package list
 
 import (
-	"github.com/LuckyBOYZ/todos/cmd/db"
+	"fmt"
+	"github.com/LuckyBOYZ/todos/repository"
 	"github.com/mergestat/timediff"
 	"github.com/olekukonko/tablewriter"
 	"os"
@@ -18,7 +19,23 @@ var Cmd = &cobra.Command{
 Depends on the --all flag you can list all tasks or only the ones that are not done.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		all, _ := cmd.Flags().GetBool("all")
-		renderTasks(all)
+		todosDatabase := repository.NewTodosDatabase()
+		var todos []repository.Todo
+		var err error
+		if all {
+			todos, err = todosDatabase.FindAll()
+		} else {
+			todos, err = todosDatabase.FindAllNotFinishedTodos()
+		}
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		var todosAsArr [][]string
+		for _, v := range todos {
+			todosAsArr = append(todosAsArr, todoToStringArray(v))
+		}
+		renderTasks(todosAsArr)
 	},
 }
 
@@ -26,8 +43,7 @@ func init() {
 	Cmd.Flags().BoolP("all", "a", false, "all tasks")
 }
 
-func renderTasks(all bool) {
-	todos := db.GetTodos(all)
+func renderTasks(todos [][]string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"id", "description", "done", "created at"})
 	for _, v := range todos {
@@ -48,4 +64,17 @@ func getTimeDifferenceFromEpochString(timestamp string) string {
 	}
 	t := time.Unix(epoch, 0)
 	return timediff.TimeDiff(t)
+}
+
+func todoToStringArray(t repository.Todo) []string {
+	var epoch int64
+	if t.Created.Valid {
+		epoch = t.Created.Time.Unix()
+	}
+	return []string{
+		strconv.Itoa(t.Id),
+		t.Description,
+		strconv.FormatBool(t.Done),
+		strconv.FormatInt(epoch, 10),
+	}
 }
