@@ -1,0 +1,7 @@
+{
+  "username": "USERNAME",
+  "password": "PASSWORD",
+  "database": "DATABASE_NAME",
+  "dbContainerName": "CONTAINER_NAME_IF_EXISTS",
+  "csvRepoFilePath": "PATH_TO_CSV_FILE"
+}
