@@ -20,7 +20,7 @@ func GetTodoRepository() ITodoRepository[Todo] {
 	}
 }
 
-func convertTodoArrToStringArr(todos []Todo) [][]string {
+func ConvertTodoArrToStringArr(todos []Todo) [][]string {
 	var stringArr [][]string
 	for _, v := range todos {
 		stringArr = append(stringArr, todoToStringArray(&v))
@@ -47,17 +47,13 @@ func stringToTodoArr(todoAsArr []string) *Todo {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	created, err := time.Parse(DATE_FORMAT, todoAsArr[3])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
+	epochInt, err := strconv.ParseInt(todoAsArr[3], 10, 64)
+	createdTime := time.Unix(epochInt, 0)
 	return &Todo{
 		Id:          id,
 		Description: todoAsArr[1],
 		Done:        done,
-		Created:     sql.NullTime{Time: created, Valid: true},
+		Created:     sql.NullTime{Time: createdTime, Valid: true},
 	}
 }
 

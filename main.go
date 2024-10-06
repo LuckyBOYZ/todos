@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/LuckyBOYZ/todos/cmd"
+	"github.com/LuckyBOYZ/todos/configuration"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"os"
@@ -16,11 +18,9 @@ If not passed, then postgres database is used`)
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("Database type:", viper.GetString("csv"))
-	return
-	//if err := configuration.LoadConfiguration(); err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//cmd.Execute()
+	if err := configuration.LoadConfiguration(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	cmd.Execute()
 }

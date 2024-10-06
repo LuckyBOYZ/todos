@@ -10,4 +10,5 @@ type IRepository[T any] interface {
 type ITodoRepository[T any] interface {
 	IRepository[T]
 	FindAllNotFinishedTodos() ([]Todo, error)
+	CompleteTodo(id int, done bool) (int64, error)
 }

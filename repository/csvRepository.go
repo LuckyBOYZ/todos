@@ -3,6 +3,7 @@ package repository
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -118,15 +119,19 @@ func (t *TodosCsv) Delete(id int) error {
 	return nil
 }
 
+func (t *TodosCsv) CompleteTodo(id int, done bool) (int64, error) {
+	panic("implement me")
+}
+
 func openCSVFile() (*os.File, error) {
-	homeDir, err := os.UserHomeDir()
+	csvFilePath := viper.GetString("csvRepoFilePath")
+	path, err := createFilePath(csvFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get home directory")
+		return nil, err
 	}
-	filePath := filepath.Join(homeDir, "todos.csv")
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open a file for reading")
+		return nil, fmt.Errorf("cannot open a file for reading, writting or appending")
 	}
 
 	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
@@ -134,6 +139,17 @@ func openCSVFile() (*os.File, error) {
 		return nil, fmt.Errorf("cannot lock the file")
 	}
 	return f, nil
+}
+
+func createFilePath(path string) (string, error) {
+	if len(path) > 0 && path[0] == '~' {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(homeDir, path[1:]), nil
+	}
+	return path, nil
 }
 
 func addIdToTodo(t *Todo, records [][]string) {

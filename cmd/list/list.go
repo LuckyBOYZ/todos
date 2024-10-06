@@ -19,7 +19,7 @@ var Cmd = &cobra.Command{
 Depends on the --all flag you can list all tasks or only the ones that are not done.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		all, _ := cmd.Flags().GetBool("all")
-		todosDatabase := repository.NewTodosDatabase()
+		todosDatabase := repository.GetTodoRepository()
 		var todos []repository.Todo
 		var err error
 		if all {
@@ -32,7 +32,7 @@ Depends on the --all flag you can list all tasks or only the ones that are not d
 			os.Exit(1)
 		}
 
-		renderTasks(todosAsArr)
+		renderTasks(repository.ConvertTodoArrToStringArr(todos))
 	},
 }
 

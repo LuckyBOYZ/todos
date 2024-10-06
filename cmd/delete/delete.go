@@ -22,7 +22,7 @@ var Cmd = &cobra.Command{
 				fmt.Println("Please provide valid task id")
 				return
 			}
-			todosDatabase := repository.NewTodosDatabase()
+			todosDatabase := repository.GetTodoRepository()
 			err = todosDatabase.Delete(todoId)
 			if err != nil {
 				fmt.Println("something went wrong during updating task status.", err)

@@ -23,9 +23,9 @@ var Cmd = &cobra.Command{
 				fmt.Println("Please provide valid task id")
 				return
 			}
-			todosDatabase := repository.NewTodosDatabase()
+			repository := repository.GetTodoRepository()
 			undone, _ := cmd.Flags().GetBool("undone")
-			lastInsertedId, err := todosDatabase.CompleteTodo(todoId, !undone)
+			lastInsertedId, err := repository.CompleteTodo(todoId, !undone)
 			if err != nil {
 				fmt.Println("Something went wrong during updating task status", err)
 				os.Exit(1)
