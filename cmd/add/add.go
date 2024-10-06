@@ -1,12 +1,10 @@
 package add
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/LuckyBOYZ/todos/repository"
 	"github.com/spf13/cobra"
 	"os"
-	"time"
 )
 
 var Cmd = &cobra.Command{
@@ -18,8 +16,8 @@ var Cmd = &cobra.Command{
 			fmt.Println("please provide a description for your task.")
 			return
 		}
-		todosDatabase := repository.NewTodosDatabase()
-		todoToSave := createTodo(args[0])
+		todosDatabase := repository.GetTodoRepository()
+		todoToSave := repository.CreateTodoByDescription(args[0])
 		err := todosDatabase.Save(todoToSave)
 		if err != nil {
 			fmt.Println(err)
@@ -30,12 +28,4 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-}
-
-func createTodo(desc string) *repository.Todo {
-	return &repository.Todo{
-		Description: desc,
-		Done:        false,
-		Created:     sql.NullTime{Time: time.Now(), Valid: true},
-	}
 }

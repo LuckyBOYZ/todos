@@ -31,10 +31,7 @@ Depends on the --all flag you can list all tasks or only the ones that are not d
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		var todosAsArr [][]string
-		for _, v := range todos {
-			todosAsArr = append(todosAsArr, todoToStringArray(v))
-		}
+
 		renderTasks(todosAsArr)
 	},
 }
@@ -64,17 +61,4 @@ func getTimeDifferenceFromEpochString(timestamp string) string {
 	}
 	t := time.Unix(epoch, 0)
 	return timediff.TimeDiff(t)
-}
-
-func todoToStringArray(t repository.Todo) []string {
-	var epoch int64
-	if t.Created.Valid {
-		epoch = t.Created.Time.Unix()
-	}
-	return []string{
-		strconv.Itoa(t.Id),
-		t.Description,
-		strconv.FormatBool(t.Done),
-		strconv.FormatInt(epoch, 10),
-	}
 }

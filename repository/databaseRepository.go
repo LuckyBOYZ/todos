@@ -15,7 +15,7 @@ var (
 
 type TodosDatabase struct{}
 
-func NewTodosDatabase() *TodosDatabase {
+func newTodosDatabase() *TodosDatabase {
 	once.Do(func() {
 		dbConn, err := NewDatabaseConnection()
 		if err != nil {
@@ -45,7 +45,7 @@ func (t *TodosDatabase) Save(data *Todo) error {
 	return nil
 }
 
-func (t *TodosDatabase) FindById(id int) (any, error) {
+func (t *TodosDatabase) FindById(id int) (*Todo, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -59,7 +59,6 @@ func (t *TodosDatabase) FindAll() ([]Todo, error) {
 		_ = rows.Close()
 	}(rows)
 
-	// Iterowanie po wierszach wyników zapytania
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
@@ -69,9 +68,12 @@ func (t *TodosDatabase) FindAll() ([]Todo, error) {
 		todos = append(todos, todo)
 	}
 
-	// Sprawdzenie błędów podczas iteracji
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+	var todosAsArr [][]string
+	for _, v := range todos {
+		todosAsArr = append(todosAsArr, todoToStringArray(&v))
 	}
 	return todos, nil
 }
@@ -102,7 +104,6 @@ func (t *TodosDatabase) FindAllNotFinishedTodos() ([]Todo, error) {
 		_ = rows.Close()
 	}(rows)
 
-	// Iterowanie po wierszach wyników zapytania
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
@@ -112,11 +113,10 @@ func (t *TodosDatabase) FindAllNotFinishedTodos() ([]Todo, error) {
 		todos = append(todos, todo)
 	}
 
-	// Sprawdzenie błędów podczas iteracji
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return todos, nil
 }
 
-var _ IDatabase[Todo] = (*TodosDatabase)(nil)
+var _ ITodoRepository[Todo] = (*TodosDatabase)(nil)

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"os"
@@ -10,14 +9,13 @@ import (
 	"syscall"
 )
 
-type Todo struct {
-	Id          int
-	Description string
-	Done        bool
-	Created     sql.NullTime
+type TodosCsv struct{}
+
+func newTodosCsv() *TodosCsv {
+	return &TodosCsv{}
 }
 
-func AddNewTodo(t *Todo) {
+func (t *TodosCsv) Save(data *Todo) error {
 	f, err := openCSVFile()
 	if err != nil {
 		panic(err)
@@ -33,41 +31,67 @@ func AddNewTodo(t *Todo) {
 	reader := csv.NewReader(f)
 	records, err := reader.ReadAll()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	addIdToTodo(t, records)
-	if err := writer.Write(todoToStringArray(*t)); err != nil {
-		panic(err)
-	}
+	addIdToTodo(data, records)
+	return writer.Write(todoToStringArray(data))
 }
 
-func GetTodos(all bool) [][]string {
+func (t *TodosCsv) FindById(id int) (*Todo, error) {
 	f, err := openCSVFile()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	reader := csv.NewReader(f)
 	records, err := reader.ReadAll()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	if all {
-		return records
-	}
-	var undoneTodos [][]string
-	for _, r := range records {
-		isUndone := r[2]
-		if isUndone == "false" {
-			undoneTodos = append(undoneTodos, r)
+
+	for _, v := range records {
+		idToCheck, err := strconv.Atoi(v[0])
+		if err != nil {
+			return nil, err
+		}
+		if idToCheck == id {
+			return stringToTodoArr(v), nil
 		}
 	}
-	return undoneTodos
+	return nil, fmt.Errorf("todo with an id %d doesn,t exist", id)
 }
 
-func DeleteTodoById(id int) {
+func (t *TodosCsv) FindAll() ([]Todo, error) {
 	f, err := openCSVFile()
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+	reader := csv.NewReader(f)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return convertStringArrToTodoArr(records), nil
+}
+
+func (t *TodosCsv) FindAllNotFinishedTodos() ([]Todo, error) {
+	f, err := openCSVFile()
+	if err != nil {
+		return nil, err
+	}
+	reader := csv.NewReader(f)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return convertStringArrToTodoArr(records), nil
+}
+
+func (t *TodosCsv) Delete(id int) error {
+	f, err := openCSVFile()
+	if err != nil {
+		return err
 	}
 	defer func(file *os.File) {
 		_ = file.Close()
@@ -76,18 +100,22 @@ func DeleteTodoById(id int) {
 	defer writer.Flush()
 	reader := csv.NewReader(f)
 	records, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
 	for _, v := range records {
 		strId, err := strconv.Atoi(v[0])
 		if err != nil {
-			panic(err)
+			return err
 		}
 		if strId == id {
 			continue
 		}
 		if err := writer.Write(v); err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 func openCSVFile() (*os.File, error) {
@@ -106,19 +134,6 @@ func openCSVFile() (*os.File, error) {
 		return nil, fmt.Errorf("cannot lock the file")
 	}
 	return f, nil
-}
-
-func todoToStringArray(t Todo) []string {
-	var epoch int64
-	if t.Created.Valid {
-		epoch = t.Created.Time.Unix()
-	}
-	return []string{
-		strconv.Itoa(t.Id),
-		t.Description,
-		strconv.FormatBool(t.Done),
-		strconv.FormatInt(epoch, 10),
-	}
 }
 
 func addIdToTodo(t *Todo, records [][]string) {
@@ -140,3 +155,5 @@ func getNextIdFromCSV(records [][]string) int {
 	}
 	return lastId + 1
 }
+
+var _ ITodoRepository[Todo] = (*TodosCsv)(nil)
